@@ -1,0 +1,9 @@
+.table-wrapper {
+    overflow-y: auto;
+    max-height: 500px; /* Adjust as needed */
+  }
+  
+  .table-body {
+    display: block;
+  }
+  
