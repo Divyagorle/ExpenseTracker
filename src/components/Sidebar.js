@@ -5,7 +5,7 @@ import './Sidebar.css';
 const Sidebar = () => {
   return (
     <div className="sidebar">
-      <Link className="active" to="/">Dashboard</Link>
+      <Link className="active" to="/dashboard">Dashboard</Link>
       <Link to="/expenses">Expenses</Link>
       <Link to="/category">Categories</Link>
       <Link to="/about">About</Link>

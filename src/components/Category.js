@@ -2,65 +2,92 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 
 const Category = () => {
   const [categories, setCategories] = useState([]);
-  const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    setCategories([
-      { id: 1, name: 'Groceries' },
-      { id: 2, name: 'Utilities' },
-      { id: 3, name: 'Rent' },
-      { id: 4, name: 'Entertainment' },
-      { id: 5, name: 'Transportation' },
-    ]);
+    fetchCategories();
   }, []);
 
-  const addCategory = (e) => {
-    e.preventDefault();
-    if (!name) return;
-
-    const newCategory = {
-      id: categories.length + 1,
-      name,
-    };
-
-    setCategories([...categories, newCategory]);
-    setName('');
-    setShowModal(false);
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/categories');
+      console.log('Fetched Categories:', response.data); // Debugging
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
   };
 
-  const updateCategory = (e) => {
+  const addCategory = async (e) => {
     e.preventDefault();
-    if (!name) return;
+    if (!category || !description) return;
 
-    setCategories(categories.map(category =>
-      category.id === editId ? { ...category, name } : category
-    ));
-    setName('');
-    setIsEditing(false);
-    setEditId(null);
-    setShowModal(false);
+    try {
+      const newCategory = { category, description };
+      const response = await axios.post('http://localhost:5000/api/categories', newCategory);
+      console.log('Added Category:', response.data); // Debugging
+      if (response.status === 201) {
+        setCategories([...categories, response.data]);
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error adding category:', error);
+    }
   };
 
-  const deleteCategory = (id) => {
-    setCategories(categories.filter(category => category.id !== id));
+  const updateCategory = async (e) => {
+    e.preventDefault();
+    if (!category || !description) return;
+
+    try {
+      const updatedCategory = { category, description };
+      const response = await axios.put(`http://localhost:5000/api/categories/${editId}`, updatedCategory);
+      console.log('Updated Category:', response.data); // Debugging
+      if (response.status === 200) {
+        setCategories(categories.map(cat =>
+          cat._id === editId ? response.data : cat
+        ));
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error updating category:', error);
+    }
+  };
+
+  const deleteCategory = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/categories/${id}`);
+      console.log('Deleted Category ID:', id); // Debugging
+      setCategories(categories.filter(cat => cat._id !== id));
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
   };
 
   const editCategory = (id) => {
-    const category = categories.find(cat => cat.id === id);
-    setName(category.name);
+    const cat = categories.find(c => c._id === id);
+    if (!cat) {
+      console.error('Category not found:', id); // Debugging
+      return;
+    }
+    setCategory(cat.category);
+    setDescription(cat.description);
     setIsEditing(true);
     setEditId(id);
     setShowModal(true);
   };
 
   const resetForm = () => {
-    setName('');
+    setCategory('');
+    setDescription('');
     setIsEditing(false);
     setEditId(null);
     setShowModal(false);
@@ -68,45 +95,37 @@ const Category = () => {
 
   return (
     <div className="content">
-      <h2 style={{ position: 'fixed', top: '10px', left: '220px', zIndex: '1000' }}>Categories</h2>
-      <Button
-        style={{  left: '220px', zIndex: '1000' }}
-        onClick={() => setShowModal(true)}
-        className="btn btn-primary mb-3"
-      >
+      <h2>Categories</h2>
+      <Button onClick={() => setShowModal(true)} className="btn btn-primary mb-3">
         <FontAwesomeIcon icon={faPlus} /> Add
       </Button>
-      <div style={{  position: 'relative' }}>
-        <table className="table" style={{ padding: '10px' }}>
-          <thead style={{ position: 'sticky', top: '0', backgroundColor: 'white', zIndex: '1000' }}>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Actions</th>
+      <table className="table">
+        <thead>
+          <tr>
+            
+            <th>Category</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categories.map((cat) => (
+            <tr key={cat._id}>
+              
+              <td>{cat.category}</td>
+              <td>{cat.description}</td>
+              <td>
+                <Button onClick={() => editCategory(cat._id)} className="btn btn-secondary btn-sm">
+                  <FontAwesomeIcon icon={faEdit} />
+                </Button>
+                <Button onClick={() => deleteCategory(cat._id)} className="btn btn-danger btn-sm" style={{ marginLeft: '10px' }}>
+                  <FontAwesomeIcon icon={faTrash} />
+                </Button>
+              </td>
             </tr>
-          </thead>
-        </table>
-        <div style={{ maxHeight: '400px', overflowY: 'scroll' }}>
-          <table className="table">
-            <tbody>
-              {categories.map((category) => (
-                <tr key={category.id}>
-                  <td>{category.id}</td>
-                  <td>{category.name}</td>
-                  <td>
-                    <Button onClick={() => editCategory(category.id)} className="btn btn-secondary btn-sm">
-                      <FontAwesomeIcon icon={faEdit} />
-                    </Button>
-                    <Button onClick={() => deleteCategory(category.id)} className="btn btn-danger btn-sm" style={{ marginLeft: '10px' }}>
-                      <FontAwesomeIcon icon={faTrash} />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          ))}
+        </tbody>
+      </table>
 
       <Modal show={showModal} onHide={resetForm}>
         <Modal.Header closeButton>
@@ -115,13 +134,23 @@ const Category = () => {
         <Modal.Body>
           <form onSubmit={isEditing ? updateCategory : addCategory}>
             <div className="mb-3">
-              <label htmlFor="name" className="form-label">Name</label>
+              <label htmlFor="category" className="form-label">Category</label>
               <input
                 type="text"
                 className="form-control"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">Description</label>
+              <input
+                type="text"
+                className="form-control"
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
             <Button type="submit" className="btn btn-primary">
