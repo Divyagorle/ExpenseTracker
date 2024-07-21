@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post('http://localhost:5000/api/login', { emailid: email, password });
       const loggedInUser = response.data;
       setIsAuthenticated(true);
+      console.log("true");
       setUser(loggedInUser);
       localStorage.setItem('user', JSON.stringify(loggedInUser));
     } catch (error) {

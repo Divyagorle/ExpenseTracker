@@ -27,7 +27,7 @@ function LoginForm() {
     try {
       const response = await axios.post('http://localhost:5000/api/login', { emailid: email, password });
       console.log('Login successful:', response.data);
-      navigate('/dashboard');  // Change '/dashboard' to the actual path you want to navigate to
+      navigate('/al');  // Change '/dashboard' to the actual path you want to navigate to
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
       setError(error.response?.data?.message || 'An error occurred. Please try again.');
